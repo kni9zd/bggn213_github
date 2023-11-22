@@ -1,2 +1,2 @@
 # bggn213_github
-bioinformatics
+bioinformatics Fall 2023
