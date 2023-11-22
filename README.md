@@ -1,2 +1,2 @@
 # bggn213_github
-bioinformatics Fall 2023
+Bioinformatics @ UC San Diego Fall 2023
