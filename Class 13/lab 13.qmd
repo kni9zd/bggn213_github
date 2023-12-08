@@ -1,0 +1,192 @@
+---
+title: "Lab 13"
+Author: Kelly Isbell (A59019188)
+format: pdf
+---
+```{r}
+#| message: false
+#| warning: false
+library(DESeq2)
+```
+
+```{r}
+counts <- read.csv("airway_scaledcounts.csv", row.names=1)
+metadata <- read.csv("airway_metadata.csv")
+#head(counts)
+#head(metadata)
+nrow(counts)
+#Q1 there are 38694 genes
+metadata$dex == "control"
+#Q2 there are 4 control cell lines
+```
+compare ctrl to treated cols
+1. identify and extract "control" columns
+2. calculate the mean value per gene for all these "control" columns
+3. do the same for treated
+4. compare the "control.mean' and 'treated.mean' values
+
+```{r}
+#step 1
+control.inds <- metadata$dex == "control"
+#metadata[control.inds, ]
+control.mean <- rowMeans(counts[, control.inds])
+#Q2 You would need to add a function that allows you to consider the mean when more samples are added. 
+#Q4
+treated.inds <- metadata$dex == "treated"
+#metadata[treated.inds, ]
+treated.mean <- rowMeans(counts[, treated.inds])
+```
+```{r}
+#Q5a
+meancounts <-data.frame(control.mean, treated.mean)
+plot(meancounts)
+```
+
+```{r}
+#Q5b - geom_point()
+library(ggplot2)
+ggplot(meancounts) + aes(control.mean, treated.mean) + geom_point(alpha=0.2)
+```
+
+```{r}
+#Q6 - log
+plot(meancounts, log="xy")
+```
+```{r}
+log2(10/10)
+log2(20/10)
+log2(5/10)
+```
+```{r}
+meancounts$log2fc <- log2(meancounts$treated.mean/meancounts$control.mean)
+```
+
+need to exclude any genes with 0 counts! ! !
+
+```{r}
+to.rm.inds <- rowSums(meancounts[,1:2] == 0) > 0
+mycounts <- meancounts[!to.rm.inds, ]
+```
+
+```{r}
+nrow(mycounts)
+```
+#Q7 arr.ind=TRUE returns the row and #columns indices where there are true values
+#unique() will ensure no rows are counted twice if there are no entries in both samples
+
+```{r}
+sum(mycounts$log2fc > +2)
+#Q8 250 genes are upregulated
+sum(mycounts$log2fc > -2)
+#Q9 21332 genes are down regulated
+#Q10 no, fold change can be large without
+# being statistically significant + it 
+# depends on the p-value
+```
+```{r}
+library(DESeq2)
+dds <- DESeqDataSetFromMatrix(countData=counts, 
+                              colData=metadata, 
+                              design=~dex)
+dds <- DESeq(dds)
+res <- results(dds)
+res
+```
+
+```{r}
+mycols <- rep("gray", nrow(res))
+mycols[ abs(res$log2FoldChange) > 2 ]  <- "red" 
+
+inds <- (res$padj < 0.01) & (abs(res$log2FoldChange) > 2 )
+mycols[ inds ] <- "blue"
+
+plot(res$log2FoldChange,  -log(res$padj), col=mycols, 
+      xlab="Log2(Fold-Change)",
+      ylab="-Log(P-value)")
+
+abline(v=c(-2,2), col="red")
+abline(h=-log(0.05), col="blue")
+
+```
+```{r}
+mycols <- rep("gray",nrow(res))
+mycols[ res$log2FoldChange >2 ] <- "black"
+mycols[ res$log2FoldChange < -2 ] <- "black"
+mycols[ res$padj > 0.05 ] <- "gray"
+```
+
+```{r}
+write.csv(res, file="myresults.csv")
+```
+
+```{r}
+library(AnnotationDbi)
+```
+
+
+```{r}
+library("org.Hs.eg.db")
+```
+
+```{r}
+res$symbol <- mapIds(org.Hs.eg.db,
+                     keys=row.names(res), # Our genenames
+                     keytype="ENSEMBL",        # The format of our genenames
+                     column="SYMBOL",          # The new format we want to add
+                     multiVals="first")
+```
+```{r}
+head(res)
+```
+```{r}
+#Q11
+res$entrez <- mapIds(org.Hs.eg.db,
+                     keys=row.names(res), 
+                     # Our genenames
+                     keytype="ENSEMBL",        
+                     # The format of our genenames
+                     column="ENTREZID",          
+                     # The new format we want to add
+                     multiVals="first")
+
+res$uniprot <- mapIds(org.Hs.eg.db,
+                     keys=row.names(res), 
+                     # Our genenames
+                     keytype="ENSEMBL",        
+                     # The format of our genenames
+                     column="UNIPROT",          
+                     # The new format we want to add
+                     multiVals="first")
+res$genename <- mapIds(org.Hs.eg.db,
+                     keys=row.names(res), 
+                     # Our genenames
+                     keytype="ENSEMBL",        
+                     # The format of our genenames
+                     column="GENENAME",          
+                     # The new format we want to add
+                     multiVals="first")
+head(res)
+```
+
+```{r}
+library(pathview)
+library(gage)
+library(gageData)
+
+data(kegg.sets.hs)
+```
+
+```{r}
+foldchanges = res$log2FoldChange
+names(foldchanges) = res$entrez
+head(foldchanges)
+keggres = gage(foldchanges, gsets=kegg.sets.hs)
+attributes (keggres)
+head(keggres$less, 3)
+```
+```{r}
+pathview(gene.data=foldchanges, pathway.id="hsa05310")
+```
+
+![](hsa05310.pathview.png)
+
