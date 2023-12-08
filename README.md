@@ -3,7 +3,7 @@ Classwork from [BGGN 213](https://bioboot.github.io/bggn213_F23/) UC San Diego (
 
 - Class 05: [Data Visualization with ggplot](https://github.com/kni9zd/bggn213_github/blob/main/Class_05/class5.pdf)
 
-- Class 06: [Why, when and how of writing your own R functions]([https://github.com/kni9zd/bggn213_github/blob/main/class5.pdf](https://github.com/kni9zd/bggn213_github/blob/main/class6.pdf))
+- Class 06: [Why, when and how of writing your own R functions](https://github.com/kni9zd/bggn213_github/blob/main/class6.pdf)
 
 - Class 07: [Introduction to machine learning for Bioinformatics 1](https://github.com/kni9zd/bggn213_github/blob/main/class7.pdf)
 
