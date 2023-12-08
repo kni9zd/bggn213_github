@@ -1,0 +1,161 @@
+---
+title: "lab08"
+author: "Kelly Isbell (A59019188)"
+format: html
+---
+```{r}
+candy_file <- "candy-data.csv"
+candy <- read.csv("candy-data.csv", row.names=1)
+head(candy)
+View(candy)
+```
+
+
+```{r}
+nrow(candy)
+sum(candy$fruity)
+#Q1 There are 85 types of candy.
+#Q2 There are 38 fruity candy types.
+```
+```{r}
+candy["Chewey Lemonhead Fruit Mix", ]$winpercent
+#Q3 The winpercent of my favorite candy, Chewey Lemonheads, is 36.02%
+candy["Kit Kat",]$winpercent
+#Q4 Kit Kat has a win percent of 76.77%
+candy["Tootsie Roll Snack Bar",]$winpercent
+#Q5 Tootsie Roll Snack Bars have a win percent of 49.65%
+```
+```{r}
+#install.packages("skimr")
+#library("skimr")
+#skim(candy)
+#Q6 Win percent seems to be on a different scale to the majority of the other columns in the dataset.
+```
+```{r}
+candy$chocolate
+
+#Q7 A 1 indicates that the candy is a chocolate, a 0 indicates the candy is not a chocolate.
+```
+```{r}
+library(ggplot2)
+```
+
+```{r}
+#Q8
+ggplot(candy) + aes(winpercent) + geom_histogram()
+```
+```{r}
+#Q9 The distribution is not symmetrical.
+
+#Q10 The center is perhaps just a little bit below 50%.
+```
+
+```{r}
+#Q11
+mean(candy$winpercent[as.logical(candy$nougat)])
+mean(candy$winpercent[as.logical(candy$chocolate)])
+mean(candy$winpercent[as.logical(candy$fruity)])
+#Q11 On average, chocolate candy is higher ranked than fruity candy
+```
+
+```{r}
+t.test(candy$winpercent[as.logical(candy$fruity)], candy$winpercent[as.logical(candy$chocolate)])
+#Q12 The difference is statistically significant (p = 2.871e-08)
+```
+
+
+```{r}
+inds <- order(candy$winpercent)
+head(candy[inds,])
+#Q13 Nik L Nip, Boston Baked Beans, Chiclets, Super Bubble, and Jawbusters are the least liked.
+```
+```{r}
+#Q14 Reese's pieces, Snickers, Kit Kat, Twix, and Reese's Miniatures are the most liked
+inds <- order(candy$winpercent)
+tail(candy[inds,])
+```
+```{r}
+#Q15
+ggplot(candy) + aes(winpercent, rownames(candy)) + geom_col()
+```
+```{r}
+#Q16
+ggplot(candy) + aes(winpercent, reorder(rownames(candy),winpercent)) + geom_col()
+```
+```{r}
+my_cols=rep("black", nrow(candy))
+my_cols[as.logical(candy$chocolate)]="chocolate"
+my_cols[as.logical(candy$bar)]="brown"
+my_cols[as.logical(candy$fruity)] = "pink"
+
+ggplot(candy) + aes(winpercent, reorder(rownames(candy), winpercent)) + geom_col(fill=my_cols)
+#Q17 Boston baked beans are the worst ranked chocolate candy
+#Q18 Starburst are the best ranked fruity candy
+```
+```{r}
+# install.packages("ggrepel")
+library("ggrepel")
+ggplot(candy) + aes(winpercent, pricepercent, label = rownames(candy)) + geom_point(col=my_cols) + geom_text_repel(col=my_cols, size = 3.3, max.overlaps=5)
+#Q19 Reeses Miniatures are the biggest bang for your buck
+```
+```{r}
+ord <- order(candy$pricepercent, decreasing = TRUE)
+head(candy[ord,c(11,12)], n=5)
+#Q20 The most expensive candies are Nik L Nip, Nestle Smarties, Ring pop, Hershey's Krackel, and Hershey's Milk Chocolate. Nik L Nip is the least liked of these 5 most expensive candies.
+```
+
+
+```{r}
+#Q21
+ggplot(candy) + aes(pricepercent, reorder(rownames(candy), pricepercent)) + geom_segment(aes(yend = reorder(rownames(candy), pricepercent), xend = 0), col="gray40") + geom_point()
+```
+```{r}
+#install.packages("corrplot")
+library(corrplot)
+cij <-cor(candy)
+corrplot(cij)
+
+```
+```{r}
+#Q22 Chocolate and fruity are the least correlated.
+
+#Q23 Chocoloate and win percent are the most positively correlated
+```
+
+```{r}
+pca <- prcomp(candy, scale=TRUE)
+summary(pca)
+```
+```{r}
+plot(pca$rotation[,1])
+
+```
+```{r}
+plot(pca$x[,1:2], col=my_cols, pch=16)
+my_data <-cbind(candy, pca$x[,1:3])
+
+p <- ggplot(my_data) + aes(x=PC1, y=PC2, size=winpercent/100, text=rownames(my_data), label=rownames(my_data)) + geom_point(col=my_cols)
+
+p
+```
+```{r}
+library(ggrepel)
+
+p + geom_text_repel(size=3.3, col=my_cols, max.overlaps = 7)  + theme(legend.position = "none") +labs(title="Halloween Candy PCA Space",subtitle="Colored by type: chocolate bar (dark brown), chocolate other (light brown), fruity (red), other (black)", caption="Data from 538")
+```
+```{r}
+#install.packages("plotly")
+library(plotly)
+```
+```{r}
+ggplotly(p)
+```
+```{r}
+par(mar=c(8,4,2,2))
+barplot(pca$rotation[,1], las=2, ylab="PC1 Contribution")
+```
+```{r}
+#Q24 Fruity, hard, and pluribus are picked up strongly by PC1. These make sense because they would have the most polarizing statistics.
+
+```
+
