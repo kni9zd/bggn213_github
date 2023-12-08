@@ -1,0 +1,63 @@
+---
+title: "AlphaFold"
+author: "Kelly Isbell (A59019188)"
+format: pdf
+---
+```{r}
+#0.073% of the sequences on Uniprot are have structures in the PDB
+(183201/251600768)*100
+
+stats <- read.csv("Data Export Summary.csv", row.names=1)
+head(stats)
+```
+```{r}
+string <- c("10", "100", 1, "1,000")
+as.numeric(string) + 1
+x <- string
+remove.comma <- function(x){
+  as.numeric(gsub(",", "", x))
+  }
+pdbstats <- apply(stats, 2, remove.comma)
+pdbstats
+
+```
+```{r}
+rownames(pdbstats) <- rownames(stats)
+pdbstats
+```
+```{r}
+totals <- apply(pdbstats, 2, sum)
+round(totals/totals["Total"] *100, 2)
+#Q1 84.83% are solved by X-ray crystallography, 8.33% are solved by EM
+#Q2
+#Q3
+```
+![](1HSG.png)
+![](1HSG (2).png)
+
+```{r}
+library(bio3d)
+pdb <- read.pdb("1HSG")
+pdb
+```
+```{r}
+attributes (pdb)
+```
+```{r}
+head(pdb$atom)
+```
+```{r}
+head(pdb$atom$resid)
+```
+```{r}
+aa321(pdb$atom$resid[pdb$calpha])
+```
+```{r}
+adk <- read.pdb("6s36")
+modes <- nma(adk)
+plot(modes)
+```
+```{r}
+mktrj(modes, pdb=adk, file = "modes.pdb")
+```
+
